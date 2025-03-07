@@ -1,0 +1,14 @@
+{
+  "name": "physique-testing-backend",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-generator": "^4.16.1",
+    "nodemon": "^3.1.9"
+  }
+}
