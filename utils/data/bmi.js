@@ -66,7 +66,7 @@ const bmiStandard = {
  * @param {number} height - 身高，单位：m
  * @param {string} gender - 性别，'male'或'female'
  * @param {number} grade - 年级，1表示高一，2表示高二，3表示高三
- * @returns {Object} 包含bmi值、bmi得分和bmi级别的对象
+ * @returns {Object} example: { bmi: 20.76, bmiScore: 100, bmiLevel: 1, bmiLevelDesc: '正常' }
  */
 function bmi(weight, height, gender = 'male', grade = 1) {
     // 参数验证
