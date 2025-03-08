@@ -180,7 +180,7 @@ function calculateVitalCapacityScore(capacity, gender = 'male', grade = 1) {
     let score = 0;
     let level = '';
     
-    // 阶梯式评分：找到第一个小于等于当前肺活量的标准
+    // 找到第一个小于等于当前肺活量的标准
     for (let i = 0; i < standards.length - 1; i++) {
         if (capacity >= standards[i].value) {
             score = standards[i].score;
@@ -188,7 +188,7 @@ function calculateVitalCapacityScore(capacity, gender = 'male', grade = 1) {
         }
     }
     
-    // 如果没有找到匹配的标准（肺活量低于最低标准），则给最低分
+    // 肺活量低于最低标准，则给最低分
     if (score === 0 && standards.length > 0) {
         score = standards[standards.length - 1].score;
     }
@@ -214,6 +214,6 @@ function calculateVitalCapacityScore(capacity, gender = 'male', grade = 1) {
 // 导出函数和标准数据
 module.exports = calculateVitalCapacityScore;
 
-// 测试示例
-console.log("男生高一示例 (4300毫升):", calculateVitalCapacityScore(4300, 'male', 1));
-console.log("女生高三示例 (2500毫升):", calculateVitalCapacityScore(2500, 'female', 3));
+
+// console.log("男生高一示例 (4300毫升):", calculateVitalCapacityScore(4300, 'male', 1));
+// console.log("女生高三示例 (2500毫升):", calculateVitalCapacityScore(2500, 'female', 3));
