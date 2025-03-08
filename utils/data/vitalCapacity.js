@@ -211,7 +211,7 @@ function calculateVitalCapacityScore(capacity, gender = 'male', grade = 1) {
     };
 }
 
-// 导出函数和标准数据
+
 module.exports = calculateVitalCapacityScore;
 
 

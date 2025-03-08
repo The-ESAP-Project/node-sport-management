@@ -115,7 +115,8 @@ function calculateBmiScore(weight, height, gender = 'male', grade = 1) {
 }
 
 
+module.exports = calculateBmiScore;
+
+
 // console.log("男生高一示例:", calculateBmiScore(65, 1.70, 'male', 1));
 // console.log("女生高三示例:", calculateBmiScore(55, 1.65, 'female', 3));
-
-module.exports = calculateBmiScore;
