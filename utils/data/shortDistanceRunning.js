@@ -215,5 +215,5 @@ function calculateRunning50mScore(time, gender = 'male', grade = 1) {
 module.exports = calculateRunning50mScore;
 
 
- console.log("男生高一示例 (7.3秒):", calculateRunning50mScore(6.3, 'male', 1));
+// console.log("男生高一示例 (7.3秒):", calculateRunning50mScore(6.3, 'male', 1));
 // console.log("女生高三示例 (8.0秒):", calculateRunning50mScore(8.0, 'female', 3)); 
