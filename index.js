@@ -6,6 +6,8 @@ const path = require('path');
 const express = require('express');
 const cluster = require('cluster');
 
+const Sequelize = require('./db');
+
 const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
 
 const numCPUs = process.env.NODE_ENV === 'development' ? 1 : os.cpus().length;
@@ -15,6 +17,17 @@ if (cluster.isMaster) {
   console.log(`Master process ${process.pid} is running`);
   const pidFile = path.join(__dirname, 'spm_backend.pid');
   fs.writeFileSync(pidFile, process.pid.toString());
+
+  const syncDatabase = async () => {
+    try {
+        await Sequelize.authenticate();
+    } catch (error) {
+        console.error('Error syncing database:', error);
+    }
+  };
+
+  syncDatabase();
+  console.log('Database synchronized');
 
   for (let i = 0; i < numCPUs; i++) {
     cluster.fork();
@@ -81,6 +94,17 @@ if (cluster.isMaster) {
   app.use(require('body-parser').json());
 
   app.use(`${API_BASE_ROUTE}/`, require('./routes'));
+
+  const syncDatabase = async () => {
+    try {
+        await Sequelize.authenticate();
+    } catch (error) {
+        console.error('Error syncing database:', error)
+    }
+  };
+
+  syncDatabase();
+  console.log('Database synchronized');
 
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
