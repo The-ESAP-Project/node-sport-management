@@ -1,5 +1,4 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
 
 const sequelize = new Sequelize(
     process.env.DB_NAME || 'sport-data-management',
@@ -16,8 +15,8 @@ const sequelize = new Sequelize(
             idle: parseInt(process.env.DB_POOL_IDLE) || 10000
         },
         dialectOptions: {
-            statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT) || 180000, // 查询超时时间（毫秒）
-            idle_in_transaction_session_timeout: parseInt(process.env.DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT) || 180000 // 事务空闲超时时间（毫秒）
+            statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT) || 180000,
+            idle_in_transaction_session_timeout: parseInt(process.env.DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT) || 180000
         }
     }
 );
@@ -26,12 +25,24 @@ async function connectDatabase() {
     try {
         await sequelize.authenticate();
         console.log('Connected to the database');
+        return true;
     } catch (error) {
         console.error('Unable to connect to the database:', error);
-        exit(1);
+        return false;
     }
 }
 
-connectDatabase();
+async function closeDatabase() {
+    try {
+        await sequelize.close();
+        console.log('Database connection closed');
+    } catch (error) {
+        console.error('Error closing database connection:', error);
+    }
+}
 
-module.exports = sequelize;
+module.exports = {
+    sequelize,
+    connectDatabase,
+    closeDatabase
+};

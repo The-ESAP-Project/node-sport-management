@@ -6,55 +6,61 @@ const path = require('path');
 const express = require('express');
 const cluster = require('cluster');
 
-const Sequelize = require('./db');
+const { sequelize, connectDatabase, closeDatabase } = require('./db');
 
 const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
 
 const numCPUs = process.env.NODE_ENV === 'development' ? 1 : os.cpus().length;
 
 if (cluster.isMaster) {
-
   console.log(`Master process ${process.pid} is running`);
   const pidFile = path.join(__dirname, 'spm_backend.pid');
   fs.writeFileSync(pidFile, process.pid.toString());
 
-  const syncDatabase = async () => {
-    try {
-        await Sequelize.authenticate();
-    } catch (error) {
-        console.error('Error syncing database:', error);
+  (async () => {
+    const connected = await connectDatabase();
+    if (!connected) {
+      console.error('Failed to connect to database, shutting down server...');
+      process.exit(1);
     }
-  };
+    console.log('Database connection established in master process');
 
-  syncDatabase();
-  console.log('Database synchronized');
+    for (let i = 0; i < numCPUs; i++) {
+      cluster.fork();
+    }
+  })();
 
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  process.on('SIGINT', () => {
+  process.on('SIGINT', async () => {
     console.log('Received SIGINT signal, shutting down server...');
     for (const id in cluster.workers) {
       cluster.workers[id].kill('SIGINT');
     }
+    
+    await closeDatabase();
+    
     fs.unlinkSync(pidFile);
     console.log('Removed PID file');
     process.exit(0);
   });
 
-  process.on('SIGTERM', () => {
+  process.on('SIGTERM', async () => {
     console.log('Received SIGTERM signal, shutting down server...');
+    
     for (const id in cluster.workers) {
       cluster.workers[id].kill('SIGTERM');
     }
+    
+    await closeDatabase();
+    
     fs.unlinkSync(pidFile);
     console.log('Removed PID file');
     process.exit(0);
   });
 
-  process.on('uncaughtException', (err) => {
+  process.on('uncaughtException', async (err) => {
     console.error(`Process ${process.pid} uncaught exception:`, err);
+    
+    await closeDatabase();
     process.exit(1);
   });
 
@@ -67,7 +73,6 @@ if (cluster.isMaster) {
   });
 
 } else {
-
   console.log(`Worker process ${process.pid} is running`);
   const app = express();
 
@@ -94,18 +99,7 @@ if (cluster.isMaster) {
   app.use(require('body-parser').json());
 
   app.use(`${API_BASE_ROUTE}/`, require('./routes'));
-
-  const syncDatabase = async () => {
-    try {
-        await Sequelize.authenticate();
-    } catch (error) {
-        console.error('Error syncing database:', error)
-    }
-  };
-
-  syncDatabase();
-  console.log('Database synchronized');
-
+  
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
@@ -125,6 +119,10 @@ if (cluster.isMaster) {
 
   process.on('uncaughtException', (err) => {
     console.error(`Worker process ${process.pid} uncaught exception:`, err);
+    
+    server.close(() => {
+      process.exit(1);
+    });
   });
 
   process.on('unhandledRejection', (reason, promise) => {
@@ -141,6 +139,10 @@ if (cluster.isMaster) {
 
   process.on('SIGTERM', () => {
     console.log(`Worker process ${process.pid} received SIGTERM signal, shutting down server...`);
+    server.close(() => {
+      console.log(`Worker process ${process.pid} has closed HTTP server`);
+      process.exit(0);
+    });
   });
 
   process.on('exit', (code) => {
