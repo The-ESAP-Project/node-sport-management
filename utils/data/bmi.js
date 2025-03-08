@@ -68,7 +68,7 @@ const bmiStandard = {
  * @param {number} grade - 年级，1表示高一，2表示高二，3表示高三
  * @returns {Object} example: { bmi: 20.76, bmiScore: 100, bmiLevel: 1, bmiLevelDesc: '正常' }
  */
-function calcualteBmiScore(weight, height, gender = 'male', grade = 1) {
+function calculateBmiScore(weight, height, gender = 'male', grade = 1) {
     // 参数验证
     if (!['male', 'female'].includes(gender)) {
         throw new Error('性别参数必须为"male"或"female"');
@@ -115,7 +115,7 @@ function calcualteBmiScore(weight, height, gender = 'male', grade = 1) {
 }
 
 
-// console.log("男生高一示例:", calcualteBmiScore(65, 1.70, 'male', 1));
-// console.log("女生高三示例:", calcualteBmiScore(55, 1.65, 'female', 3));
+// console.log("男生高一示例:", calculateBmiScore(65, 1.70, 'male', 1));
+// console.log("女生高三示例:", calculateBmiScore(55, 1.65, 'female', 3));
 
-module.exports = calcualteBmiScore;
+module.exports = calculateBmiScore;
