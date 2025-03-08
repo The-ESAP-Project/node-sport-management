@@ -1,11 +1,21 @@
 const { Sequelize } = require('sequelize');
 
+let dialectOptions = {};
+
+if ( process.env.DB_DIALECT === 'postgres') {
+    dialectOptions = {
+        statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT) || 180000,
+        idle_in_transaction_session_timeout: parseInt(process.env.DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT) || 180000
+    };
+}
+
 const sequelize = new Sequelize(
-    process.env.DB_NAME || 'sport-data-management',
+    process.env.DB_NAME || 'spm',
     process.env.DB_USER || 'root',
     process.env.DB_PASSWORD || 'root',
     {
-        host: process.env.NODE_ENV === 'production' ? process.env.DB_HOST_PROD : process.env.DB_HOST_DEV || 'localhost',
+        host: process.env.DB_HOST ? process.env.DB_HOST : 'localhost',
+        port: process.env.DB_PORT || 3306,
         dialect: process.env.DB_DIALECT || 'mysql',
         logging: process.env.DB_LOGGING === 'true',
         pool: {
@@ -14,10 +24,7 @@ const sequelize = new Sequelize(
             acquire: parseInt(process.env.DB_POOL_ACQUIRE) || 30000,
             idle: parseInt(process.env.DB_POOL_IDLE) || 10000
         },
-        dialectOptions: {
-            statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT) || 180000,
-            idle_in_transaction_session_timeout: parseInt(process.env.DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT) || 180000
-        }
+        dialectOptions: dialectOptions
     }
 );
 

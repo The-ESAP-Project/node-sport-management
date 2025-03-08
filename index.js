@@ -75,11 +75,16 @@ if (cluster.isMaster) {
 } else {
   console.log(`Worker process ${process.pid} is running`);
   const app = express();
+  app.use(require('helmet')());
 
   const PORT = process.env.PORT || 8012;
   const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'];
 
-  function corsMiddleware(req, res, next) {
+  const server = require('http').createServer(app);
+
+  app.use(require('./utils/jwtParser'));
+  app.use(require('body-parser').json());
+  app.use(async (req, res, next) => {
     const origin = req.headers.origin;
     if (ALLOWED_ORIGINS.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
@@ -88,17 +93,29 @@ if (cluster.isMaster) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
+      return res.sendStatus(200);
     }
     next();
-  }
+  });
 
-  const server = require('http').createServer(app);
+  app.use(`${API_BASE_ROUTE}/auth`, require('./routes/auth'));
 
-  app.use(corsMiddleware);
-  app.use(require('body-parser').json());
+  app.use(`${API_BASE_ROUTE}/*`, (req, res) => {
+    res.status(404).json({
+      code: -1,
+      message: `API endpoint not found: ${req.originalUrl}`,
+      data: null
+    });
+  });
 
-  app.use(`${API_BASE_ROUTE}/`, require('./routes'));
+  app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(500).json({
+      code: -1, 
+      message: 'Internal server error',
+      data: process.env.NODE_ENV === 'development' ? err.message : null
+    });
+  });
   
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
