@@ -82,8 +82,6 @@ if (cluster.isMaster) {
 
   const server = require('http').createServer(app);
 
-  app.use(require('./utils/jwtParser'));
-  app.use(require('body-parser').json());
   app.use(async (req, res, next) => {
     const origin = req.headers.origin;
     if (ALLOWED_ORIGINS.includes(origin)) {
@@ -97,6 +95,8 @@ if (cluster.isMaster) {
     }
     next();
   });
+  app.use(require('body-parser').json());
+  app.use(require('./utils/jwtParser'));
 
   app.use(`${API_BASE_ROUTE}/auth`, require('./routes/auth'));
 
