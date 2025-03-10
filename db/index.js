@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 
 let dialectOptions = {};
 
-if ( process.env.DB_DIALECT === 'postgres') {
+if (process.env.DB_DIALECT === 'postgres') {
     dialectOptions = {
         statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT) || 180000,
         idle_in_transaction_session_timeout: parseInt(process.env.DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT) || 180000
@@ -48,8 +48,21 @@ async function closeDatabase() {
     }
 }
 
-module.exports = {
-    sequelize,
-    connectDatabase,
-    closeDatabase
-};
+async function syncDatabase(force = false) {
+    try {
+        // force: true 会先删除表再创建
+        await sequelize.sync({ force });
+        console.log('Database synchronized successfully');
+        return true;
+    } catch (error) {
+        console.error('Error syncing database:', error);
+        return false;
+    }
+}
+
+// 导出 sequelize 实例
+module.exports = sequelize;
+// 导出函数
+module.exports.connectDatabase = connectDatabase;
+module.exports.closeDatabase = closeDatabase;
+module.exports.syncDatabase = syncDatabase;

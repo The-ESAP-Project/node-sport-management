@@ -6,7 +6,8 @@ const path = require('path');
 const express = require('express');
 const cluster = require('cluster');
 
-const { sequelize, connectDatabase, closeDatabase } = require('./db');
+const models = require('./models');
+const { connectDatabase, closeDatabase, syncDatabase } = require('./db');
 
 const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
 
@@ -23,6 +24,13 @@ if (cluster.isMaster) {
       console.error('Failed to connect to database, shutting down server...');
       process.exit(1);
     }
+
+    const synced = await syncDatabase();
+    if (!synced) {
+      console.error('Failed to sync database, shutting down server...');
+      process.exit(1);
+    }
+    
     console.log('Database connection established in master process');
 
     for (let i = 0; i < numCPUs; i++) {

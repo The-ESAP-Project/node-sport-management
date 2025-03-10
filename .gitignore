@@ -146,3 +146,6 @@ dist
 .DS_Store
 
 doc_ignore/
+
+yarn.lock
+package-lock.json
