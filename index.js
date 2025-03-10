@@ -9,8 +9,9 @@ const cluster = require('cluster');
 const models = require('./models');
 const { connectDatabase, closeDatabase, syncDatabase } = require('./db');
 
-const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
 
+const NEED_INIT_DB = process.env.NEED_INIT === 'true';
+const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
 const numCPUs = process.env.NODE_ENV === 'development' ? 1 : os.cpus().length;
 
 if (cluster.isMaster) {
@@ -25,7 +26,7 @@ if (cluster.isMaster) {
       process.exit(1);
     }
 
-    const synced = await syncDatabase();
+    const synced = await syncDatabase( NEED_INIT_DB );
     if (!synced) {
       console.error('Failed to sync database, shutting down server...');
       process.exit(1);
@@ -107,6 +108,7 @@ if (cluster.isMaster) {
   app.use(require('./utils/jwtParser'));
 
   app.use(`${API_BASE_ROUTE}/auth`, require('./routes/auth'));
+  app.use(`${API_BASE_ROUTE}/superadmin`, require('./routes/superadmin'));
 
   app.use(`${API_BASE_ROUTE}/*`, (req, res) => {
     res.status(404).json({

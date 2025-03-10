@@ -28,13 +28,15 @@ async function jwtParser(req, res, next) {
         }
 
         req.user = decoded
-        const { userID, username, grade, className } = decoded;
+        const { username, role } = decoded;
 
-        if ( !userID || !username || !grade || !className) {
+        if ( !username || !role ) {
             return res.status(401).json({ code: -1, message: 'Invalid token structure', data: null });
         }
 
         if ( requestPath.startsWith(`${deployRoute}/user/`)) {
+            return next();
+        } else if ( requestPath.startsWith(`${deployRoute}/superadmin/`) && decoded.role === 'superadmin') {
             return next();
         } else {
             return res.status(403).json({ code: -1, message: 'Access denied', data: null });
