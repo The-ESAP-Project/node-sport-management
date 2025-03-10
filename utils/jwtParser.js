@@ -16,12 +16,7 @@ async function jwtParser(req, res, next) {
 
     try {
 
-        const decoded = await new Promise((resolve, reject) => {
-            jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-                if (err) reject(err);
-                else resolve(decoded);
-            });
-        });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
         if (!decoded) {
             return res.status(401).json({ code: -1, message: 'Unauthorized - Token verification failed', data: null });
