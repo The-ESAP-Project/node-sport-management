@@ -187,7 +187,7 @@ function calculateSitAndReachScore(distance, gender = 'male', grade = 1) {
         }
     }
     
-    // 距离小于所有标），则给最低分
+    // 距离小于所有标准，则给最低分
     if (score === 0 && standards.length > 0) {
         score = standards[standards.length - 1].score;
     }
