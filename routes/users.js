@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controller/UserController');
 
-router.get('/getUsers', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const users = await UserController.getAllUsers();
 
@@ -16,7 +16,7 @@ router.get('/getUsers', async (req, res) => {
     }
 });
 
-router.post('/createUser', async (req, res) => {
+router.post('/', async (req, res) => {
     const { username, password, role } = req.body;
     try {
         
@@ -42,7 +42,22 @@ router.post('/createUser', async (req, res) => {
     }
 });
 
-router.put('/updateUser/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await UserController.getUserById(id);
+        if (!user) {
+            return res.status(404).json({ code: -1, message: 'User not found', data: null });
+        }
+
+        delete user.dataValues.password;
+        res.status(200).json({ code: 0, message: 'Success', data: user });
+    } catch (error) {
+        res.status(500).json({ code: -1, message: error.message, data: null });
+    }
+});
+
+router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { username, password, role } = req.body;
     try {
@@ -77,7 +92,7 @@ router.put('/updateUser/:id', async (req, res) => {
     }
 });
 
-router.delete('/deleteUser/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     try {
         

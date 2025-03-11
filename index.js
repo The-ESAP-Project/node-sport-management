@@ -6,6 +6,7 @@ const Path = require('path');
 const express = require('express');
 const cluster = require('cluster');
 
+const authorize = require('./utils/authorizer');
 const { globalLimiter, authLimiter } = require('./utils/limiter');
 
 const models = require('./models');
@@ -113,8 +114,8 @@ if (cluster.isMaster) {
   app.use(require('./utils/jwtParser'));
 
   app.use(`${API_BASE_ROUTE}/auth`, authLimiter, require('./routes/auth'));
-  app.use(`${API_BASE_ROUTE}/user`, require('./routes/user'));
-  app.use(`${API_BASE_ROUTE}/superadmin`, require('./routes/superadmin'));  
+  app.use(`${API_BASE_ROUTE}/users`, authorize(['superadmin']), require('./routes/users'));
+ 
 
   app.use(`${API_BASE_ROUTE}/*`, (req, res) => {
     res.status(404).json({
