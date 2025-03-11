@@ -2,10 +2,11 @@ require('dotenv').config();
 
 const os = require('os');
 const fs = require('fs');
-const path = require('path');
+const Path = require('path');
 const express = require('express');
 const cluster = require('cluster');
-const RateLimit = require('express-rate-limit');
+
+const { globalLimiter, authLimiter } = require('./utils/limiter');
 
 const models = require('./models');
 const { connectDatabase, closeDatabase, syncDatabase } = require('./db');
@@ -17,7 +18,7 @@ const numCPUs = process.env.NODE_ENV === 'development' ? 1 : os.cpus().length;
 
 if (cluster.isMaster) {
   console.log(`Master process ${process.pid} is running`);
-  const pidFile = path.join(__dirname, 'spm_backend.pid');
+  const pidFile = Path.join(__dirname, 'spm_backend.pid');
   fs.writeFileSync(pidFile, process.pid.toString());
 
   (async () => {
@@ -86,15 +87,6 @@ if (cluster.isMaster) {
   console.log(`Worker process ${process.pid} is running`);
   const app = express();
   
-  // set up rate limiter: maximum of 100 requests per 15 minutes
-  const limiter = RateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // max 100 requests per windowMs
-  });
-  
-  // apply rate limiter to all requests
-  app.use(limiter);
-  
   app.use(require('helmet')());
 
   const PORT = process.env.PORT || 8012;
@@ -115,11 +107,14 @@ if (cluster.isMaster) {
     }
     next();
   });
+
+  app.use(globalLimiter);
   app.use(require('body-parser').json());
   app.use(require('./utils/jwtParser'));
 
-  app.use(`${API_BASE_ROUTE}/auth`, require('./routes/auth'));
-  app.use(`${API_BASE_ROUTE}/superadmin`, require('./routes/superadmin'));
+  app.use(`${API_BASE_ROUTE}/auth`, authLimiter, require('./routes/auth'));
+  app.use(`${API_BASE_ROUTE}/user`, require('./routes/user'));
+  app.use(`${API_BASE_ROUTE}/superadmin`, require('./routes/superadmin'));  
 
   app.use(`${API_BASE_ROUTE}/*`, (req, res) => {
     res.status(404).json({
