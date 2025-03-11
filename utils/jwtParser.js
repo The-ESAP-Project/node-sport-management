@@ -28,7 +28,7 @@ async function jwtParser(req, res, next) {
             return res.status(401).json({ code: -1, message: 'Invalid token structure', data: null });
         }
 
-        if (requestPath.startsWith(`${deployRoute}/sport-data/`)) {
+        if (requestPath.startsWith(`${deployRoute}/sport/`)) {
             return userLimiter(req, res, next);
         } else if (requestPath.startsWith(`${deployRoute}/users/`) && role === 'superadmin') {
             return adminLimiter(req, res, next);

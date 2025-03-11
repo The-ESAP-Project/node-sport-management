@@ -71,37 +71,39 @@
 ### 安装步骤
 
 1. 克隆仓库
+
 ```bash
 git clone https://github.com/The-ESAP-Project/sport-management.git
 cd sport-management
 ```
 
 2. 安装依赖
+
 ```bash
-npm install
+yarn install
 ```
 
 3. 配置环境变量
+
 ```bash
 cp .env.example .env
 # 编辑 .env 文件，设置数据库连接等参数
 ```
 
-4. 初始化数据库
-```bash
-npm run db:init
-```
+4. 启动开发服务器
 
-5. 启动开发服务器
 ```bash
-npm run dev
+yarn dev
 ```
 
 ### 生产环境部署
 
 ```bash
-npm run build
-npm start
+# 构建项目
+yarn build
+
+# 启动生产服务器
+yarn start
 ```
 
 ## API 文档
@@ -115,9 +117,6 @@ API 端点遵循 RESTful 设计原则，主要分为以下几类：
 - **/api/v1/sport** - 体测数据
 - **/api/v1/report** - 报告生成
 - **/api/v1/superadmin** - 超级管理员功能
-
-详细的API文档可通过以下方式访问：
-- 开发环境: `http://localhost:8012/api-docs`
 
 ## 安全特性
 

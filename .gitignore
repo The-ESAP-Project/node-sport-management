@@ -147,5 +147,4 @@ dist
 
 doc_ignore/
 
-yarn.lock
 package-lock.json
