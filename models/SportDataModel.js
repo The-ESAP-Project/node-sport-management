@@ -78,7 +78,12 @@ const SportData = sequelize.define('SportData', {
         type: DataTypes.INTEGER,
         allowNull: true,
         comment: '引体向上 (个数)'
-    }
+    },
+    score: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: '综合成绩'
+    },
 }, {
     tableName: 'SportData',
     timestamps: false
