@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const cluster = require('cluster');
+const RateLimit = require('express-rate-limit');
 
 const models = require('./models');
 const { connectDatabase, closeDatabase, syncDatabase } = require('./db');
@@ -84,6 +85,16 @@ if (cluster.isMaster) {
 } else {
   console.log(`Worker process ${process.pid} is running`);
   const app = express();
+  
+  // set up rate limiter: maximum of 100 requests per 15 minutes
+  const limiter = RateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per windowMs
+  });
+  
+  // apply rate limiter to all requests
+  app.use(limiter);
+  
   app.use(require('helmet')());
 
   const PORT = process.env.PORT || 8012;
