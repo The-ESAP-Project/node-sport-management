@@ -1,7 +1,7 @@
 const sequelize = require('../db');
 const { DataTypes } = require('sequelize');
 
-const ClassData = sequelize.define('ClassData', {
+const ClassInfo = sequelize.define('ClassInfo', {
     id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
@@ -20,8 +20,8 @@ const ClassData = sequelize.define('ClassData', {
         comment: '班级名称'
     }
 }, {
-    tableName: 'ClassData',
+    tableName: 'ClassInfo',
     timestamps: false
 });
 
-module.exports = ClassData;
+module.exports = ClassInfo;
