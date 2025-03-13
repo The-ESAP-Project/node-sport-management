@@ -114,7 +114,8 @@ if (cluster.isMaster) {
   app.use(require('./utils/jwtParser'));
 
   app.use(`${API_BASE_ROUTE}/auth`, authLimiter, require('./routes/auth'));
-  app.use(`${API_BASE_ROUTE}/users`, authorize(['superadmin']), require('./routes/users'));
+  app.use(`${API_BASE_ROUTE}/user`, authorize(['superadmin']), require('./routes/user'));
+  app.use(`${API_BASE_ROUTE}/student`, authorize(['superadmin', 'admin']), require('./routes/student'));
  
 
   app.use(`${API_BASE_ROUTE}/*`, (req, res) => {

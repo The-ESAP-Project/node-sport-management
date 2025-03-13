@@ -30,7 +30,9 @@ async function jwtParser(req, res, next) {
 
         if (requestPath.startsWith(`${deployRoute}/sport/`)) {
             return userLimiter(req, res, next);
-        } else if (requestPath.startsWith(`${deployRoute}/users/`) && role === 'superadmin') {
+        } else if (requestPath.startsWith(`${deployRoute}/student/`)) {
+            return userLimiter(req, res, next);
+        } else if (requestPath.startsWith(`${deployRoute}/user/`) && role === 'superadmin') {
             return adminLimiter(req, res, next);
         } else {
             return res.status(403).json({ code: -1, message: 'Access denied', data: null });
