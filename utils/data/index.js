@@ -23,31 +23,12 @@ class StudentData{
         this.cache_origin_data = {};
         this.cache_data = {};
     }
-    async _getRemoteData(){
+    async __getRemoteData(){
         //...todo
     }
 
     async getFullData(){
-        //...todo
-    }
-
-    //...todo
-}
-
-class GradeData{
-    /**
-     * @param {string} 年级
-     */
-    constructor(grade_id){
-        this.grade_id = grade_id
-    }
-
-    async _getRemoteData(){
-        //...todo
-    }
-
-    async getFullData(){
-        //EXAMPLE 
+        //EXAMPLE
         if (this.cache_origin_data.length == 0){
             //...getRemoteData
         }else{
@@ -72,8 +53,59 @@ class GradeData{
                 sapScore
             }
         }
-
     }
+
+    //...todo
+}
+
+class GradeData{
+    /**
+     * @param {string} 年级
+     */
+    constructor(grade_id){
+        this.grade_id = grade_id
+        /**
+         * this.data=
+         * {
+         *   "stu1_id":{
+         *     "name": str,
+         *     "gender": str,
+         *     "year": int,
+         *     "data": {
+         *       "erScore": int,
+         *       "sdrScore": int,
+         *       "sarScore": int,
+         *       "sljScore": int,
+         *       "vcScore": int,
+         *       "sapScore": int,
+         *     },
+         *    "stu2_id":{...},
+         *     ...
+         *   }
+         * }
+         */
+        this.data = {};
+        this.standard = {};
+    }
+
+    async __getRemoteData(){
+        //...todo
+    }
+
+    async getAnalyseScoreData(){
+        //EXAMPLE
+        //maybe can be optimized
+        for (let stu_id in this.data){
+            let data = this.data[stu_id];
+            for (let key in data){
+                let average = data[key].reduce((a, b) => a + b, 0) / data[key].length;
+                let percentage = (average / this.standard[key]) * 100;
+                this.data[stu_id][key] = percentage;
+            }
+        }
+    }
+
+    
 
     //...todo
 }
