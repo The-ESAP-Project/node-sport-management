@@ -7,23 +7,23 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.3",
+    "body-parser": "^2.2.0",
     "cluster": "^0.7.7",
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.0",
-    "helmet": "^8.0.0",
-    "http-errors": "~1.6.3",
+    "cookie-parser": "~1.4.7",
+    "debug": "~4.4.1",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "http-errors": "~2.0.0",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "~1.9.1",
-    "mysql2": "^3.13.0",
-    "pg": "^8.13.3",
-    "sequelize": "^6.37.6"
+    "morgan": "~1.10.1",
+    "mysql2": "^3.14.3",
+    "pg": "^8.16.3",
+    "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.10"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b"
 }
