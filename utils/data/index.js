@@ -193,16 +193,13 @@ class StudentData {
    */
   getHistoryAnalysis() {
     if (this.history_data.length === 0) {
-      // 假设这里调用某个方法获取历史数据
       this.__getHistoryData();
     }
 
-    // 如果还是没有历史数据，返回空对象
     if (this.history_data.length === 0) {
       return { error: "没有可用的历史数据" };
     }
 
-    // 对历史数据进行分析
     const analysis = {
       years: [],
       categories: {
@@ -216,41 +213,28 @@ class StudentData {
         avgScore: [],
       },
       improvement: {},
-      bestPerformance: {
-        year: null,
-        score: 0,
-      },
-      worstPerformance: {
-        year: null,
-        score: 100,
-      },
-      trend: "稳定", // 稳定、上升、下降、波动
+      bestPerformance: { year: null, score: 0 },
+      worstPerformance: { year: null, score: 100 },
+      trend: "稳定",
+      trajectory: [], // 新增
     };
 
-    // 填充年份和各项成绩数据
     this.history_data.forEach((data) => {
       analysis.years.push(data.year);
-
       for (const category in analysis.categories) {
         if (data[category] !== undefined) {
           analysis.categories[category].push(data[category]);
         }
       }
-
       // 记录最好和最差成绩
       if (data.avgScore > analysis.bestPerformance.score) {
-        analysis.bestPerformance = {
-          year: data.year,
-          score: data.avgScore,
-        };
+        analysis.bestPerformance = { year: data.year, score: data.avgScore };
       }
-
       if (data.avgScore < analysis.worstPerformance.score) {
-        analysis.worstPerformance = {
-          year: data.year,
-          score: data.avgScore,
-        };
+        analysis.worstPerformance = { year: data.year, score: data.avgScore };
       }
+      // 轨迹
+      analysis.trajectory.push({ year: data.year, avgScore: data.avgScore });
     });
 
     // 计算各项目进步情况
@@ -360,28 +344,57 @@ class GradeData {
       levelDistribution: { excellent: 0, good: 0, pass: 0, fail: 0 },
       topStudents: [],
       weakestCategories: [],
+      genderStats: {
+        // 新增
+        male: { averageScores: {}, weakestCategories: [] },
+        female: { averageScores: {}, weakestCategories: [] },
+      },
     };
 
     if (stats.totalStudents === 0) return { error: "没有可用的年级数据" };
 
-    const scoreSum = {
-      erScore: 0,
-      sdrScore: 0,
-      sarScore: 0,
-      sljScore: 0,
-      vcScore: 0,
-      sapScore: 0,
-      total: 0,
+    // 初始化性别分项统计
+    const genderSum = {
+      male: {
+        erScore: 0,
+        sdrScore: 0,
+        sarScore: 0,
+        sljScore: 0,
+        vcScore: 0,
+        sapScore: 0,
+        total: 0,
+      },
+      female: {
+        erScore: 0,
+        sdrScore: 0,
+        sarScore: 0,
+        sljScore: 0,
+        vcScore: 0,
+        sapScore: 0,
+        total: 0,
+      },
     };
-    const validCount = {
-      erScore: 0,
-      sdrScore: 0,
-      sarScore: 0,
-      sljScore: 0,
-      vcScore: 0,
-      sapScore: 0,
-      total: 0,
+    const genderCount = {
+      male: {
+        erScore: 0,
+        sdrScore: 0,
+        sarScore: 0,
+        sljScore: 0,
+        vcScore: 0,
+        sapScore: 0,
+        total: 0,
+      },
+      female: {
+        erScore: 0,
+        sdrScore: 0,
+        sarScore: 0,
+        sljScore: 0,
+        vcScore: 0,
+        sapScore: 0,
+        total: 0,
+      },
     };
+
     const studentsArr = Object.values(this.data);
 
     studentsArr.forEach((student) => {
@@ -406,6 +419,14 @@ class GradeData {
             validCount[cat]++;
             studentTotal += student.data[cat];
             validItems++;
+            // 性别分项
+            if (student.gender === "male") {
+              genderSum.male[cat] += student.data[cat];
+              genderCount.male[cat]++;
+            } else if (student.gender === "female") {
+              genderSum.female[cat] += student.data[cat];
+              genderCount.female[cat]++;
+            }
           }
         });
         if (validItems > 0) {
@@ -413,6 +434,14 @@ class GradeData {
           validCount.total++;
           student.data.total = studentTotal;
           student.data.average = studentTotal / validItems;
+          // 性别分项
+          if (student.gender === "male") {
+            genderSum.male.total += studentTotal;
+            genderCount.male.total++;
+          } else if (student.gender === "female") {
+            genderSum.female.total += studentTotal;
+            genderCount.female.total++;
+          }
         } else {
           student.data.total = 0;
           student.data.average = 0;
@@ -442,10 +471,70 @@ class GradeData {
     ].forEach((cat) => {
       stats.averageScores[cat] =
         validCount[cat] > 0 ? scoreSum[cat] / validCount[cat] : 0;
+      // 性别分项
+      stats.genderStats.male.averageScores[cat] =
+        genderCount.male[cat] > 0
+          ? genderSum.male[cat] / genderCount.male[cat]
+          : 0;
+      stats.genderStats.female.averageScores[cat] =
+        genderCount.female[cat] > 0
+          ? genderSum.female[cat] / genderCount.female[cat]
+          : 0;
     });
-    // 总平均分（所有学生的平均分的均值）
     stats.averageScores.average =
       validCount.total > 0 ? scoreSum.total / (validCount.total * 6) : 0;
+    stats.genderStats.male.averageScores.average =
+      genderCount.male.total > 0
+        ? genderSum.male.total / (genderCount.male.total * 6)
+        : 0;
+    stats.genderStats.female.averageScores.average =
+      genderCount.female.total > 0
+        ? genderSum.female.total / (genderCount.female.total * 6)
+        : 0;
+
+    // 性别分项弱项
+    stats.genderStats.male.weakestCategories = [
+      { name: "耐力跑", score: stats.genderStats.male.averageScores.erScore },
+      { name: "50米跑", score: stats.genderStats.male.averageScores.sdrScore },
+      {
+        name: "坐位体前屈",
+        score: stats.genderStats.male.averageScores.sarScore,
+      },
+      {
+        name: "立定跳远",
+        score: stats.genderStats.male.averageScores.sljScore,
+      },
+      { name: "肺活量", score: stats.genderStats.male.averageScores.vcScore },
+      {
+        name: "仰卧起坐/引体向上",
+        score: stats.genderStats.male.averageScores.sapScore,
+      },
+    ]
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 2);
+
+    stats.genderStats.female.weakestCategories = [
+      { name: "耐力跑", score: stats.genderStats.female.averageScores.erScore },
+      {
+        name: "50米跑",
+        score: stats.genderStats.female.averageScores.sdrScore,
+      },
+      {
+        name: "坐位体前屈",
+        score: stats.genderStats.female.averageScores.sarScore,
+      },
+      {
+        name: "立定跳远",
+        score: stats.genderStats.female.averageScores.sljScore,
+      },
+      { name: "肺活量", score: stats.genderStats.female.averageScores.vcScore },
+      {
+        name: "仰卧起坐/引体向上",
+        score: stats.genderStats.female.averageScores.sapScore,
+      },
+    ]
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 2);
 
     // 排名
     stats.topStudents = studentsArr
@@ -558,7 +647,9 @@ class GradeData {
 
     // 填充年份和各项成绩数据
     for (const year in this.history_data) {
-      const yearData = this.history_data[year];
+      const gradeData = this.history_data[year];
+      const yearData =
+        typeof gradeData === "function" ? gradeData() : gradeData;
       analysis.years.push(parseInt(year));
 
       // 记录当年的平均分
