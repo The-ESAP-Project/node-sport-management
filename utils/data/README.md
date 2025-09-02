@@ -1,155 +1,106 @@
-# 体测数据处理模块 - TypeScript 版本
 
-这是体测数据处理模块的 TypeScript 重构版本，提供了完整的类型安全支持和现代化的代码架构。
+## 体测数据处理模块使用说明
 
-## 文件结构
+> 本文档适用于多人协作开发，介绍 `utils/data` 目录下所有导出内容及最佳实践。
 
-```
-utils/data/
-├── types.ts                    # 类型定义文件
-├── index.ts                    # 主要数据处理类 (StudentData, GradeData)
-├── enduranceRun.ts            # 耐力跑计算
-├── shortDistanceRunning.ts    # 50米跑计算
-├── sitAndReach.ts            # 坐位体前屈计算
-├── standingLongJump.ts       # 立定跳远计算
-├── vitalCapacity.ts          # 肺活量计算
-├── sitUpAndPullUp.ts         # 仰卧起坐/引体向上计算
-├── data.ts                   # 统一导出文件
-└── README.md                 # 使用说明
-```
+---
 
-## 主要改进
+### 目录结构
 
-### 1. **类型安全**
-- 完整的 TypeScript 类型定义
-- 强类型检查，减少运行时错误
-- 智能代码提示和自动补全
+- `index.ts` 统一导出入口（推荐只用此文件导入）
+- `studentData.ts` 学生体测数据处理类
+- `gradeData.ts` 年级体测数据处理类
+- 各项体测计算函数文件（如 `enduranceRun.ts`、`sitAndReach.ts` 等）
+- `types.ts` 类型定义文件
 
-### 2. **现代化语法**
-- ES6+ 模块导入/导出
-- 类的访问修饰符 (public, private)
-- 接口和类型别名
-- 泛型支持
+---
 
-### 3. **代码组织**
-- 清晰的模块划分
-- 统一的错误处理
-- 标准化的函数签名
+### 导入方法
 
-### 4. **性能优化**
-- 一次遍历完成所有统计
-- 按有效数据人数计算平均分
-- 性别分项统计优化
-
-## 使用示例
-
-### 基本用法
+**推荐统一从 `index.ts` 导入所有功能：**
 
 ```typescript
-import { StudentData, GradeData, calculateEnduranceRunScore } from './utils/data/data';
-
-// 1. 单项计算
-const result = calculateEnduranceRunScore(220, 'male', 1);
-console.log(result); // { score: 90, level: "优秀" }
-
-// 2. 学生数据处理
-const student = new StudentData("张三", "2021001", "male", 2023, 1);
-const fullData = student.getFullData();
-const historyAnalysis = student.getHistoryAnalysis();
-
-// 3. 年级数据处理
-const grade = new GradeData(1, 2023);
-const gradeStats = grade.getGradeData();
-const historyAnalysis = grade.getGradeHistoryAnalysis();
+import {
+  StudentData,
+  GradeData,
+  calculateEnduranceRunScore,
+  calculateRunning50mScore,
+  calculateSitAndReachScore,
+  calculateStandingLongJumpScore,
+  calculateVitalCapacityScore,
+  calculateSitUpAndPullUpScore,
+  // 类型定义
+  Gender,
+  Grade,
+  Level,
+  ScoreData,
+  GradeStats,
+} from './utils/data';
 ```
 
-### 类型安全示例
+---
+
+### 主要导出内容
+
+#### 1. 领域模型类
+
+- **StudentData**
+  - 用于单个学生体测数据的处理、成绩计算、历史分析
+  - 常用方法：`getFullData()`、`getHistoryAnalysis()`、`getItemScore(itemKey)`
+
+- **GradeData**
+  - 用于年级整体体测数据统计、分项分析、趋势分析
+  - 常用方法：`getGradeData()`、`getAnalyseScoreData()`、`getGradeHistoryAnalysis()`
+
+#### 2. 体测成绩计算函数
+
+- `calculateEnduranceRunScore`
+- `calculateRunning50mScore`
+- `calculateSitAndReachScore`
+- `calculateStandingLongJumpScore`
+- `calculateVitalCapacityScore`
+- `calculateSitUpAndPullUpScore`
+
+> 所有计算函数均为纯函数，参数为原始数据、性别、年级，返回分数和评级。
+
+#### 3. 类型定义
+
+- `Gender`, `Grade`, `Level` 等枚举类型
+- `ScoreData`, `GradeStats`, `StudentHistoryAnalysis` 等接口
+- 详见 `types.ts` 文件
+
+---
+
+### 使用示例
+
+#### 1. 计算单个学生成绩
 
 ```typescript
-import { Gender, Grade, CalculateResult } from './utils/data/types';
-
-// 类型安全的函数参数
-function processStudentData(
-  name: string,
-  gender: Gender,    // 只能是 'male' | 'female'
-  grade: Grade       // 只能是 1 | 2 | 3
-) {
-  // TypeScript 会确保参数类型正确
-  const student = new StudentData(name, "2021001", gender, 2023, grade);
-  return student.getFullData();
-}
-
-// 类型安全的返回值
-function calculateScore(seconds: number): CalculateResult | null {
-  return calculateEnduranceRunScore(seconds, 'male', 1);
-}
+const stu = new StudentData('张三', '20230001', 'male', 2025, 2);
+const score = stu.getFullData();
+console.log(score);
 ```
 
-## 主要功能
+#### 2. 统计年级成绩
 
-### StudentData 类
-- `getFullData()`: 获取学生完整体测成绩
-- `getItemScore(itemKey)`: 获取单项成绩详情
-- `getHistoryAnalysis()`: 获取历年成绩趋势分析
-
-### GradeData 类
-- `getGradeData()`: 获取年级统计数据（包含性别分项）
-- `getAnalyseScoreData()`: 获取成绩分析
-- `getGradeHistoryAnalysis()`: 获取历年趋势分析
-
-### 计算函数
-- `calculateEnduranceRunScore()`: 耐力跑
-- `calculateRunning50mScore()`: 50米跑
-- `calculateSitAndReachScore()`: 坐位体前屈
-- `calculateStandingLongJumpScore()`: 立定跳远
-- `calculateVitalCapacityScore()`: 肺活量
-- `calculateSitUpAndPullUpScore()`: 仰卧起坐/引体向上
-
-## 新增功能
-
-### 1. 性别分项分析
 ```typescript
-const gradeStats = grade.getGradeData();
-console.log(gradeStats.genderStats.male.averageScores);    // 男生各项平均分
-console.log(gradeStats.genderStats.female.weakestCategories); // 女生弱项
+const grade = new GradeData(2, 2025);
+const stats = grade.getGradeData();
+console.log(stats);
 ```
 
-### 2. 个体成长轨迹
+#### 3. 直接调用计算函数
+
 ```typescript
-const analysis = student.getHistoryAnalysis();
-console.log(analysis.trajectory); // 历年平均分轨迹
-console.log(analysis.improvement); // 各项目进步情况
+const result = calculateEnduranceRunScore(320, 'male', 2);
+console.log(result); // { score: xx, level: '良好' }
 ```
 
-### 3. 优化的算法逻辑
-- 时间复杂度从多次 O(n) 降至一次 O(n)
-- 按有效数据人数计算平均分
-- 内存使用优化
+---
 
-## 迁移指南
+### 协作建议
 
-### 从 JavaScript 版本迁移
-
-1. **更新导入语句**
-```typescript
-// 旧版本 (JS)
-const { StudentData, GradeData } = require('./utils/data/index.js');
-
-// 新版本 (TS)
-import { StudentData, GradeData } from './utils/data/data';
-```
-
-2. **添加类型注解**
-```typescript
-// 为函数参数和返回值添加类型
-function processData(studentId: string, grade: Grade): ScoreData {
-  // ...
-}
-```
-
-3. **使用接口和类型**
-```typescript
-import { GradeStats, StudentHistoryAnalysis } from './utils/data/types';
-
-const stats: GradeStats = grade.getGradeData();
-```
+- **统一入口**：所有导入建议只用 `index.ts`，避免直接引用子模块，便于后期维护和升级。
+- **类型安全**：严格使用 `types.ts` 中定义的类型，减少类型错误。
+- **单一职责**：如需扩展功能，建议新建文件并在 `index.ts` 统一导出。
+- **文档同步**：如有新增导出或重要变更，请及时更新本 README。
