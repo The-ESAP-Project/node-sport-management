@@ -1,40 +1,73 @@
-const fs = require("fs");
-const path = require("path");
-const calculateSitAndReachScore = require("./sitAndReach");
-const calculateEnduranceRunScore = require("./enduranceRun");
-const calculateRunning50mScore = require("./shortDistanceRunning");
-const calculateSitUpAndPullUpScore = require("./sitUpAndPullUp");
-const calculateStandingLongJumpScore = require("./standingLongJump");
-const calculateVitalCapacityScore = require("./vitalCapacity");
+import * as fs from "fs";
+import * as path from "path";
+import { calculateSitAndReachScore } from "./sitAndReach";
+import { calculateEnduranceRunScore } from "./enduranceRun";
+import { calculateRunning50mScore } from "./shortDistanceRunning";
+import { calculateSitUpAndPullUpScore } from "./sitUpAndPullUp";
+import { calculateStandingLongJumpScore } from "./standingLongJump";
+import { calculateVitalCapacityScore } from "./vitalCapacity";
+import {
+  Gender,
+  Grade,
+  Level,
+  OriginData,
+  ScoreData,
+  TestItemConfig,
+  ItemScoreDetail,
+  StudentHistoryData,
+  StudentHistoryAnalysis,
+  GradeStats,
+  GradeHistoryAnalysis,
+  ErrorResponse,
+  TestItemKey,
+  ImprovementData,
+  Trend,
+} from "./types";
 
-class StudentData {
+export class StudentData {
+  public name: string;
+  public stu_id: string;
+  public gender: Gender;
+  public year: number;
+  public grade_id: Grade;
+  public cache_origin_data: OriginData;
+  public cache_data: ScoreData;
+  public history_data: StudentHistoryData[];
+
   /**
-   *
-   * @param {string} 学生姓名
-   * @param {string} 学生学号
-   * @param {string} 学生性别
-   * @param {number} 查询指定年份数据
+   * 学生体测数据处理类
+   * @param name 学生姓名
+   * @param stu_id 学生学号
+   * @param gender 学生性别
+   * @param year 查询指定年份数据
+   * @param grade 年级
    */
-  constructor(name, stu_id, gender, year, grade) {
+  constructor(
+    name: string,
+    stu_id: string,
+    gender: Gender,
+    year?: number,
+    grade?: Grade
+  ) {
     this.name = name;
     this.stu_id = stu_id;
     this.gender = gender;
-    this.year = year;
+    this.year = year || new Date().getFullYear();
     this.grade_id = grade || 1;
     this.cache_origin_data = {};
-    this.cache_data = {};
+    this.cache_data = {} as ScoreData;
     this.history_data = [];
   }
 
-  __getRemoteData() {
-    //...todo
+  private __getRemoteData(): void {
+    // TODO: 实现远程数据获取逻辑
   }
 
   /**
    * 获取指定年份的学生体测数据和成绩
-   * @returns {Object} 学生体测成绩数据
+   * @returns 学生体测成绩数据
    */
-  getFullData() {
+  public getFullData(): ScoreData {
     if (Object.keys(this.cache_origin_data).length === 0) {
       this.__getRemoteData(); // 获取远程数据
     }
@@ -49,27 +82,27 @@ class StudentData {
           const data = this.cache_origin_data[item.dataKey];
           if (data === undefined || data === null) {
             console.warn(`${item.name}数据缺失`);
-            return { key: item.key, score: 0, level: "无数据" };
+            return { key: item.key, score: 0, level: "无数据" as Level };
           }
           const result = item.calculate(data, this.gender, this.grade_id);
           return {
             key: item.key,
             score: result?.score || 0,
-            level: result?.level || "无评级",
+            level: result?.level || ("无评级" as Level),
           };
         } catch (error) {
           console.error(`计算${item.name}成绩时出错:`, error);
-          return { key: item.key, score: 0, level: "计算错误" };
+          return { key: item.key, score: 0, level: "计算错误" as Level };
         }
       });
 
       // 构建成绩对象
-      const scores = {};
-      const levels = {};
+      const scores: Partial<ScoreData> = {};
+      const levels: Record<string, Level> = {};
       let totalScore = 0;
 
       results.forEach((result) => {
-        scores[result.key] = result.score;
+        (scores as any)[result.key] = result.score;
         levels[result.key.replace("Score", "Level")] = result.level;
         totalScore += result.score;
       });
@@ -86,7 +119,7 @@ class StudentData {
         overallLevel,
         year: this.year,
         testItemsCount: testItems.length, // 记录测试项目数量
-      };
+      } as ScoreData;
     }
 
     return this.cache_data;
@@ -94,16 +127,16 @@ class StudentData {
 
   /**
    * 计算总体评级
-   * @param {number} avgScore 平均分
-   * @returns {string} 评级
+   * @param avgScore 平均分
+   * @returns 评级
    * @private
    */
-  _calculateOverallLevel(avgScore) {
+  private _calculateOverallLevel(avgScore: number): Level {
     // 评级标准配置
     const levelStandards = [
-      { threshold: 85, level: "优秀" },
-      { threshold: 70, level: "良好" },
-      { threshold: 60, level: "及格" },
+      { threshold: 85, level: "优秀" as Level },
+      { threshold: 70, level: "良好" as Level },
+      { threshold: 60, level: "及格" as Level },
     ];
 
     for (const standard of levelStandards) {
@@ -116,10 +149,10 @@ class StudentData {
 
   /**
    * 获取体测项目配置
-   * @returns {Array} 体测项目配置数组
+   * @returns 体测项目配置数组
    * @private
    */
-  _getTestItemsConfig() {
+  private _getTestItemsConfig(): TestItemConfig[] {
     return [
       {
         key: "erScore",
@@ -162,10 +195,10 @@ class StudentData {
 
   /**
    * 获取单项成绩详情
-   * @param {string} itemKey 项目键名
-   * @returns {Object|null} 单项成绩详情
+   * @param itemKey 项目键名
+   * @returns 单项成绩详情
    */
-  getItemScore(itemKey) {
+  public getItemScore(itemKey: TestItemKey): ItemScoreDetail | null {
     const fullData = this.getFullData();
     if (!fullData || Object.keys(fullData).length === 0) {
       return null;
@@ -182,16 +215,16 @@ class StudentData {
     return {
       name: item.name,
       score: fullData[item.key] || 0,
-      level: fullData[item.key.replace("Score", "Level")] || "无评级",
+      level: (fullData as any)[item.key.replace("Score", "Level")] || "无评级",
       rawData: this.cache_origin_data[item.dataKey],
     };
   }
 
   /**
    * 获取学生历年体测数据分析
-   * @returns {Object} 学生历年体测数据趋势分析
+   * @returns 学生历年体测数据趋势分析
    */
-  getHistoryAnalysis() {
+  public getHistoryAnalysis(): StudentHistoryAnalysis | ErrorResponse {
     if (this.history_data.length === 0) {
       this.__getHistoryData();
     }
@@ -200,7 +233,7 @@ class StudentData {
       return { error: "没有可用的历史数据" };
     }
 
-    const analysis = {
+    const analysis: StudentHistoryAnalysis = {
       years: [],
       categories: {
         erScore: [],
@@ -213,8 +246,8 @@ class StudentData {
         avgScore: [],
       },
       improvement: {},
-      bestPerformance: { year: null, score: 0 },
-      worstPerformance: { year: null, score: 100 },
+      bestPerformance: { year: 0, score: 0 },
+      worstPerformance: { year: 0, score: 100 },
       trend: "稳定",
       trajectory: [], // 新增
     };
@@ -222,8 +255,12 @@ class StudentData {
     this.history_data.forEach((data) => {
       analysis.years.push(data.year);
       for (const category in analysis.categories) {
-        if (data[category] !== undefined) {
-          analysis.categories[category].push(data[category]);
+        if (data[category as keyof StudentHistoryData] !== undefined) {
+          (
+            analysis.categories[
+              category as keyof typeof analysis.categories
+            ] as number[]
+          ).push(data[category as keyof StudentHistoryData] as number);
         }
       }
       // 记录最好和最差成绩
@@ -243,18 +280,14 @@ class StudentData {
       const lastYear = this.history_data[this.history_data.length - 1];
 
       for (const category in analysis.categories) {
-        if (
-          firstYear[category] !== undefined &&
-          lastYear[category] !== undefined
-        ) {
-          const change = lastYear[category] - firstYear[category];
-          const changePercent = ((change / firstYear[category]) * 100).toFixed(
-            2
-          );
+        const key = category as keyof StudentHistoryData;
+        if (firstYear[key] !== undefined && lastYear[key] !== undefined) {
+          const change = (lastYear[key] as number) - (firstYear[key] as number);
+          const changePercent = (change / (firstYear[key] as number)) * 100;
 
           analysis.improvement[category] = {
             change,
-            changePercent: parseFloat(changePercent),
+            changePercent: parseFloat(changePercent.toFixed(2)),
             improved: change > 0,
           };
         }
@@ -297,17 +330,25 @@ class StudentData {
    * 获取学生历年体测数据
    * @private
    */
-  __getHistoryData() {
+  private __getHistoryData(): void {
+    // TODO: 实现从服务器获取历史数据的逻辑
     // this.history_data = [...从服务器获取的历史数据];
   }
 }
 
-class GradeData {
+export class GradeData {
+  public grade_id: Grade;
+  public year: number;
+  public data: Record<string, any>;
+  public standard: Record<string, number>;
+  public history_data: Record<string, any>;
+
   /**
-   * @param {string} 年级
-   * @param {number} 查询年份
+   * 年级体测数据处理类
+   * @param grade_id 年级
+   * @param year 查询年份
    */
-  constructor(grade_id, year) {
+  constructor(grade_id: Grade, year?: number) {
     this.grade_id = grade_id;
     this.year = year || new Date().getFullYear();
     this.data = {};
@@ -315,20 +356,39 @@ class GradeData {
     this.history_data = {};
   }
 
-  __getRemoteData() {
-    //...todo
+  private __getRemoteData(): void {
+    // TODO: 实现远程数据获取逻辑
   }
 
   /**
    * 获取年级指定年份的体测数据和成绩
-   * @returns {Object} 年级体测成绩数据
+   * @returns 年级体测成绩数据
    */
-  getGradeData() {
+  public getGradeData(): GradeStats | ErrorResponse {
     if (Object.keys(this.data).length === 0) {
       this.__getRemoteData();
     }
 
-    const stats = {
+    const scoreSum = {
+      erScore: 0,
+      sdrScore: 0,
+      sarScore: 0,
+      sljScore: 0,
+      vcScore: 0,
+      sapScore: 0,
+      total: 0,
+    };
+    const validCount = {
+      erScore: 0,
+      sdrScore: 0,
+      sarScore: 0,
+      sljScore: 0,
+      vcScore: 0,
+      sapScore: 0,
+      total: 0,
+    };
+
+    const stats: GradeStats = {
       totalStudents: Object.keys(this.data).length,
       genderDistribution: { male: 0, female: 0 },
       averageScores: {
@@ -345,9 +405,8 @@ class GradeData {
       topStudents: [],
       weakestCategories: [],
       genderStats: {
-        // 新增
-        male: { averageScores: {}, weakestCategories: [] },
-        female: { averageScores: {}, weakestCategories: [] },
+        male: { averageScores: {} as any, weakestCategories: [] },
+        female: { averageScores: {} as any, weakestCategories: [] },
       },
     };
 
@@ -397,7 +456,13 @@ class GradeData {
 
     const studentsArr = Object.values(this.data);
 
-    studentsArr.forEach((student) => {
+    studentsArr.forEach((student: any) => {
+      // 先计算学生成绩
+      if (typeof student.getFullData === "function") {
+        // 如果 student 是 StudentData 实例
+        student.data = student.getFullData();
+      }
+
       // 性别分布
       if (student.gender === "male") stats.genderDistribution.male++;
       else if (student.gender === "female") stats.genderDistribution.female++;
@@ -415,20 +480,23 @@ class GradeData {
           "sapScore",
         ].forEach((cat) => {
           if (typeof student.data[cat] === "number" && student.data[cat] > 0) {
-            scoreSum[cat] += student.data[cat];
-            validCount[cat]++;
+            scoreSum[cat as keyof typeof scoreSum] += student.data[cat];
+            validCount[cat as keyof typeof validCount]++;
             studentTotal += student.data[cat];
             validItems++;
             // 性别分项
             if (student.gender === "male") {
-              genderSum.male[cat] += student.data[cat];
-              genderCount.male[cat]++;
+              genderSum.male[cat as keyof typeof genderSum.male] +=
+                student.data[cat];
+              genderCount.male[cat as keyof typeof genderCount.male]++;
             } else if (student.gender === "female") {
-              genderSum.female[cat] += student.data[cat];
-              genderCount.female[cat]++;
+              genderSum.female[cat as keyof typeof genderSum.female] +=
+                student.data[cat];
+              genderCount.female[cat as keyof typeof genderCount.female]++;
             }
           }
         });
+
         if (validItems > 0) {
           scoreSum.total += studentTotal;
           validCount.total++;
@@ -448,7 +516,7 @@ class GradeData {
         }
 
         // 级别
-        let level = "fail";
+        let level: keyof typeof stats.levelDistribution = "fail";
         if (student.data.average >= 85) level = "excellent";
         else if (student.data.average >= 70) level = "good";
         else if (student.data.average >= 60) level = "pass";
@@ -469,18 +537,20 @@ class GradeData {
       "sapScore",
       "total",
     ].forEach((cat) => {
-      stats.averageScores[cat] =
-        validCount[cat] > 0 ? scoreSum[cat] / validCount[cat] : 0;
+      const key = cat as keyof typeof scoreSum;
+      stats.averageScores[key] =
+        validCount[key] > 0 ? scoreSum[key] / validCount[key] : 0;
       // 性别分项
-      stats.genderStats.male.averageScores[cat] =
-        genderCount.male[cat] > 0
-          ? genderSum.male[cat] / genderCount.male[cat]
+      stats.genderStats.male.averageScores[key] =
+        genderCount.male[key] > 0
+          ? genderSum.male[key] / genderCount.male[key]
           : 0;
-      stats.genderStats.female.averageScores[cat] =
-        genderCount.female[cat] > 0
-          ? genderSum.female[cat] / genderCount.female[cat]
+      stats.genderStats.female.averageScores[key] =
+        genderCount.female[key] > 0
+          ? genderSum.female[key] / genderCount.female[key]
           : 0;
     });
+
     stats.averageScores.average =
       validCount.total > 0 ? scoreSum.total / (validCount.total * 6) : 0;
     stats.genderStats.male.averageScores.average =
@@ -538,7 +608,7 @@ class GradeData {
 
     // 排名
     stats.topStudents = studentsArr
-      .map((s) => ({
+      .map((s: any) => ({
         id: s.stu_id,
         name: s.name,
         totalScore: s.totalScore || 0,
@@ -563,18 +633,18 @@ class GradeData {
 
   /**
    * 获取学生成绩数据分析
-   * @returns {Object} 成绩分析结果
+   * @returns 成绩分析结果
    */
-  getAnalyseScoreData() {
+  public getAnalyseScoreData(): Record<string, any> {
     if (Object.keys(this.data).length === 0) {
       this.__getRemoteData();
     }
 
-    const analysisResult = {};
+    const analysisResult: Record<string, any> = {};
 
-    for (let stu_id in this.data) {
+    for (const stu_id in this.data) {
       const studentData = this.data[stu_id];
-      const studentAnalysis = {};
+      const studentAnalysis: any = {};
 
       if (studentData.data) {
         // 计算各项成绩占标准分的百分比
@@ -616,9 +686,9 @@ class GradeData {
 
   /**
    * 获取年级历年体测数据分析
-   * @returns {Object} 年级历年体测数据趋势分析
+   * @returns 年级历年体测数据趋势分析
    */
-  getGradeHistoryAnalysis() {
+  public getGradeHistoryAnalysis(): GradeHistoryAnalysis | ErrorResponse {
     if (Object.keys(this.history_data).length === 0) {
       this.__getGradeHistoryData();
     }
@@ -629,7 +699,7 @@ class GradeData {
     }
 
     // 对历史数据进行分析
-    const analysis = {
+    const analysis: GradeHistoryAnalysis = {
       years: [],
       averageScores: {
         erScore: [],
@@ -649,7 +719,9 @@ class GradeData {
     for (const year in this.history_data) {
       const gradeData = this.history_data[year];
       const yearData =
-        typeof gradeData === "function" ? gradeData() : gradeData;
+        typeof gradeData.getGradeData === "function"
+          ? gradeData.getGradeData()
+          : gradeData;
       analysis.years.push(parseInt(year));
 
       // 记录当年的平均分
@@ -658,9 +730,11 @@ class GradeData {
           yearData.averageScores &&
           yearData.averageScores[category] !== undefined
         ) {
-          analysis.averageScores[category].push(
-            yearData.averageScores[category]
-          );
+          (
+            analysis.averageScores[
+              category as keyof typeof analysis.averageScores
+            ] as number[]
+          ).push(yearData.averageScores[category]);
         }
       }
 
@@ -676,7 +750,10 @@ class GradeData {
       analysis.years.sort((a, b) => a - b);
 
       for (const category in analysis.averageScores) {
-        const scores = analysis.averageScores[category];
+        const scores =
+          analysis.averageScores[
+            category as keyof typeof analysis.averageScores
+          ];
         if (scores.length >= 2) {
           // 计算起始年份与最新年份的差异
           const firstYear = scores[0];
@@ -702,7 +779,7 @@ class GradeData {
             }
           }
 
-          let trend = "稳定";
+          let trend: Trend = "稳定";
           if (
             increasingCount > decreasingCount &&
             increasingCount > scores.length / 3
@@ -729,9 +806,17 @@ class GradeData {
    * 获取年级历年体测数据
    * @private
    */
-  __getGradeHistoryData() {
+  private __getGradeHistoryData(): void {
+    // TODO: 实现从服务器获取历史数据的逻辑
     // this.history_data = {...从服务器获取的历史数据};
   }
 }
 
-module.exports = { StudentData, GradeData };
+export {
+  calculateSitAndReachScore,
+  calculateEnduranceRunScore,
+  calculateRunning50mScore,
+  calculateSitUpAndPullUpScore,
+  calculateStandingLongJumpScore,
+  calculateVitalCapacityScore,
+};
