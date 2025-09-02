@@ -1,25 +1,41 @@
-require('dotenv').config();
+import 'dotenv/config';
+import os from 'os';
+import fs from 'fs';
+import path from 'path';
+import express, { Request, Response, NextFunction } from 'express';
+import cluster from 'cluster';
+import helmet from 'helmet';
+// @ts-ignore
+import bodyParser from 'body-parser';
+// @ts-ignore
+import cookieParser from 'cookie-parser';
+import http from 'http';
 
-const os = require('os');
-const fs = require('fs');
-const Path = require('path');
-const express = require('express');
-const cluster = require('cluster');
-
-const authorize = require('./utils/authorizer');
-const { globalLimiter, authLimiter } = require('./utils/limiter');
-
-const models = require('./models');
-const { connectDatabase, closeDatabase, syncDatabase } = require('./db');
+// @ts-ignore
+import authorize from './utils/authorizer';
+// @ts-ignore
+import { globalLimiter, authLimiter } from './utils/limiter';
+// @ts-ignore
+import jwtParser from './utils/jwtParser';
+// @ts-ignore
+import models from './models';
+// @ts-ignore
+import { connectDatabase, closeDatabase, syncDatabase } from './db';
+// @ts-ignore
+import authRoutes from './routes/auth';
+// @ts-ignore
+import userRoutes from './routes/user';
+// @ts-ignore
+import studentRoutes from './routes/student';
 
 
 const NEED_INIT_DB = process.env.NEED_INIT === 'true';
-const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api/v1';
+const API_BASE_ROUTE = process.env.API_BASE_ROUTE || '/api';
 const numCPUs = process.env.NODE_ENV === 'development' ? 1 : os.cpus().length;
 
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
   console.log(`Master process ${process.pid} is running`);
-  const pidFile = Path.join(__dirname, 'spm_backend.pid');
+  const pidFile = path.join(__dirname, 'spm_backend.pid');
   fs.writeFileSync(pidFile, process.pid.toString());
 
   (async () => {
@@ -45,7 +61,9 @@ if (cluster.isMaster) {
   process.on('SIGINT', async () => {
     console.log('Received SIGINT signal, shutting down server...');
     for (const id in cluster.workers) {
-      cluster.workers[id].kill('SIGINT');
+      if (cluster.workers[id]) {
+        cluster.workers[id]!.kill('SIGINT');
+      }
     }
     
     await closeDatabase();
@@ -59,7 +77,9 @@ if (cluster.isMaster) {
     console.log('Received SIGTERM signal, shutting down server...');
     
     for (const id in cluster.workers) {
-      cluster.workers[id].kill('SIGTERM');
+      if (cluster.workers[id]) {
+        cluster.workers[id]!.kill('SIGTERM');
+      }
     }
     
     await closeDatabase();
@@ -88,17 +108,18 @@ if (cluster.isMaster) {
   console.log(`Worker process ${process.pid} is running`);
   const app = express();
   
-  app.use(require('helmet')());
+  app.use(helmet());
 
   const PORT = process.env.PORT || 8012;
   const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'];
 
-  const server = require('http').createServer(app);
+  const server = http.createServer(app);
 
-  app.use(async (req, res, next) => {
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
     const origin = req.headers.origin;
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -110,15 +131,15 @@ if (cluster.isMaster) {
   });
 
   app.use(globalLimiter);
-  app.use(require('body-parser').json());
-  app.use(require('./utils/jwtParser'));
+  app.use(bodyParser.json());
+  app.use(cookieParser());
+  app.use(jwtParser);
 
-  app.use(`${API_BASE_ROUTE}/auth`, authLimiter, require('./routes/auth'));
-  app.use(`${API_BASE_ROUTE}/user`, authorize(['superadmin']), require('./routes/user'));
-  app.use(`${API_BASE_ROUTE}/student`, authorize(['superadmin', 'admin']), require('./routes/student'));
- 
+  app.use(`${API_BASE_ROUTE}/auth`, authLimiter, authRoutes);
+  app.use(`${API_BASE_ROUTE}/user`, authorize(['superadmin']), userRoutes);
+  app.use(`${API_BASE_ROUTE}/student`, authorize(['superadmin', 'admin']), studentRoutes);
 
-  app.use(`${API_BASE_ROUTE}/*`, (req, res) => {
+  app.use(`/*path`, (req, res) => {
     res.status(404).json({
       code: -1,
       message: `API endpoint not found: ${req.originalUrl}`,
@@ -126,7 +147,7 @@ if (cluster.isMaster) {
     });
   });
 
-  app.use((err, req, res, next) => {
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.error('Global error handler:', err);
     res.status(500).json({
       code: -1, 
@@ -139,7 +160,7 @@ if (cluster.isMaster) {
     console.log(`Server is running on port ${PORT}`);
   });
 
-  server.on('error', (error) => {
+  server.on('error', (error: any) => {
     if (error.syscall !== 'listen') {
       throw error;
     }
