@@ -2,8 +2,8 @@ import type { PaginationInfo, PaginationQuery } from './api'
 
 // 用户管理相关类型定义
 
-// 用户角色 - 注意：后端模型使用 'superadmin' | 'admin' | 'reporter'
-export type UserRole = 'reporter' | 'admin' | 'superadmin'
+// 用户角色 - 注意：后端模型使用 'admin' | 'reporter'
+export type UserRole = 'reporter' | 'admin'
 
 // 用户状态
 export type UserStatus = 'active' | 'inactive' | 'suspended'

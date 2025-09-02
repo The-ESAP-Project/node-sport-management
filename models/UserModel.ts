@@ -51,7 +51,7 @@ UserModel.init({
     comment: '密码哈希'
   },
   role: {
-    type: DataTypes.ENUM('superadmin', 'admin', 'reporter'),
+    type: DataTypes.ENUM('admin', 'reporter'),
     allowNull: false,
     defaultValue: 'reporter',
     comment: '用户角色'

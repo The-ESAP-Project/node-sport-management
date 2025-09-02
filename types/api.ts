@@ -13,3 +13,18 @@ export interface PaginationInfo {
   total: number
   pages: number
 }
+
+// API 响应基础接口
+export interface ApiResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
+  timestamp: string
+}
+
+// 错误响应接口
+export interface ApiError {
+  code: number
+  message: string
+  timestamp: string
+}

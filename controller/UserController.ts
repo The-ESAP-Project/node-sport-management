@@ -1,6 +1,7 @@
 import UserModel, { User } from '../models/UserModel';
 import type { UserModel as UserDB, CreateUserRequest, UpdateUserRequest, User as UserResponse } from '../types/user';
 import type { UserProfile } from '../types/auth';
+import PasswordUtils from '../utils/password';
 
 class UserController {
   async getAllUsers(): Promise<UserResponse[]> {
@@ -24,15 +25,35 @@ class UserController {
   }
 
   async createUser(data: CreateUserRequest): Promise<UserResponse> {
+    // 验证密码强度
+    const passwordValidation = PasswordUtils.validatePasswordStrength(data.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(passwordValidation.message);
+    }
+
+    // 哈希密码
+    const hashedPassword = await PasswordUtils.hashPassword(data.password);
+
     const user = await UserModel.create({
       ...data,
+      password: hashedPassword, // 使用哈希后的密码
       status: 'active' as const
     });
     return this.formatUserResponse(user);
   }
 
   async updateUser(id: number, data: UpdateUserRequest): Promise<UserResponse | null> {
-    const [affectedRows] = await UserModel.update(data, { where: { id } });
+    // 如果更新密码，需要验证密码强度并哈希
+    const updateData = { ...data };
+    if (data.password) {
+      const passwordValidation = PasswordUtils.validatePasswordStrength(data.password);
+      if (!passwordValidation.isValid) {
+        throw new Error(passwordValidation.message);
+      }
+      updateData.password = await PasswordUtils.hashPassword(data.password);
+    }
+
+    const [affectedRows] = await UserModel.update(updateData, { where: { id } });
     if (affectedRows > 0) {
       const user = await UserModel.findByPk(id);
       return user ? this.formatUserResponse(user) : null;

@@ -90,7 +90,39 @@ cp .env.example .env
 # 编辑 .env 文件，设置数据库连接等参数
 ```
 
-4. 启动开发服务器
+### 默认管理员账号
+
+系统会在数据库首次初始化时自动创建一个默认的超级管理员账号：
+
+- **用户名**: `admin` (可通过 `DEFAULT_ADMIN_USERNAME` 环境变量修改)
+- **密码**: `Admin123!` (可通过 `DEFAULT_ADMIN_PASSWORD` 环境变量修改)
+- **角色**: 超级管理员
+
+⚠️ **重要安全提醒**:
+- 生产环境部署前，请务必修改默认密码！
+- 建议在 `.env` 文件中设置自定义的管理员账号信息：
+
+```bash
+# 默认管理员账号配置
+DEFAULT_ADMIN_USERNAME=your_admin_username
+DEFAULT_ADMIN_PASSWORD=YourStrongPassword123!
+DEFAULT_ADMIN_NAME=管理员姓名
+```
+
+系统只会在数据库完全为空时创建默认账号。如果数据库中已有用户，则不会创建默认账号。
+
+### 初始化数据库
+
+```bash
+# 开发环境
+export NEED_INIT=true
+yarn dev
+
+# 或者直接设置环境变量
+NEED_INIT=true yarn dev
+```
+
+### 启动开发服务器
 
 ```bash
 yarn dev

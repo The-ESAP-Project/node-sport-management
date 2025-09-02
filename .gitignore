@@ -148,3 +148,6 @@ dist
 doc_ignore/
 
 package-lock.json
+
+/sth_good
+/docs
