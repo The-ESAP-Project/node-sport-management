@@ -29,17 +29,31 @@ export class GradeData {
     this.history_data = {};
   }
 
-  private __getRemoteData(): void {
+  private async __getRemoteData(): Promise<void> {
     // TODO: 实现远程数据获取逻辑
+    try {
+      const response = await fetch(
+        `/api/grade/${this.grade_id}/data?year=${this.year}`
+      );
+      if (response.ok) {
+        this.data = await response.json();
+      } else {
+        console.warn(`获取年级${this.grade_id}的数据失败`);
+        this.data = {};
+      }
+    } catch (error) {
+      console.error("年级数据获取失败:", error);
+      this.data = {};
+    }
   }
 
   /**
    * 获取年级指定年份的体测数据和成绩
    * @returns 年级体测成绩数据
    */
-  public getGradeData(): GradeStats | ErrorResponse {
+  public async getGradeData(): Promise<GradeStats | ErrorResponse> {
     if (Object.keys(this.data).length === 0) {
-      this.__getRemoteData();
+      await this.__getRemoteData();
     }
 
     const scoreSum = {
@@ -308,9 +322,9 @@ export class GradeData {
    * 获取学生成绩数据分析
    * @returns 成绩分析结果
    */
-  public getAnalyseScoreData(): Record<string, any> {
+  public async getAnalyseScoreData(): Promise<Record<string, any>> {
     if (Object.keys(this.data).length === 0) {
-      this.__getRemoteData();
+      await this.__getRemoteData();
     }
 
     const analysisResult: Record<string, any> = {};
@@ -361,9 +375,11 @@ export class GradeData {
    * 获取年级历年体测数据分析
    * @returns 年级历年体测数据趋势分析
    */
-  public getGradeHistoryAnalysis(): GradeHistoryAnalysis | ErrorResponse {
+  public async getGradeHistoryAnalysis(): Promise<
+    GradeHistoryAnalysis | ErrorResponse
+  > {
     if (Object.keys(this.history_data).length === 0) {
-      this.__getGradeHistoryData();
+      await this.__getGradeHistoryData();
     }
 
     // 如果还是没有历史数据，返回空对象
@@ -393,7 +409,7 @@ export class GradeData {
       const gradeData = this.history_data[year];
       const yearData =
         typeof gradeData.getGradeData === "function"
-          ? gradeData.getGradeData()
+          ? await gradeData.getGradeData()
           : gradeData;
       analysis.years.push(parseInt(year));
 
@@ -479,8 +495,19 @@ export class GradeData {
    * 获取年级历年体测数据
    * @private
    */
-  private __getGradeHistoryData(): void {
+  private async __getGradeHistoryData(): Promise<void> {
     // TODO: 实现从服务器获取历史数据的逻辑
-    // this.history_data = {...从服务器获取的历史数据};
+    try {
+      const response = await fetch(`/api/grade/${this.grade_id}/history`);
+      if (response.ok) {
+        this.history_data = await response.json();
+      } else {
+        console.warn(`获取年级${this.grade_id}的历史数据失败`);
+        this.history_data = {};
+      }
+    } catch (error) {
+      console.error("年级历史数据获取失败:", error);
+      this.history_data = {};
+    }
   }
 }

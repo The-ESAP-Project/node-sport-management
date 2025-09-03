@@ -56,17 +56,32 @@ export class StudentData {
     this.history_data = [];
   }
 
-  private __getRemoteData(): void {
+  private async __getRemoteData(): Promise<void> {
     // TODO: 实现远程数据获取逻辑
+    try {
+      // 示例：从API获取学生原始数据
+      const response = await fetch(
+        `/api/student/${this.stu_id}/data?year=${this.year}`
+      );
+      if (response.ok) {
+        this.cache_origin_data = await response.json();
+      } else {
+        console.warn(`获取学生${this.stu_id}的数据失败`);
+        this.cache_origin_data = {};
+      }
+    } catch (error) {
+      console.error("远程数据获取失败:", error);
+      this.cache_origin_data = {};
+    }
   }
 
   /**
    * 获取指定年份的学生体测数据和成绩
    * @returns 学生体测成绩数据
    */
-  public getFullData(): ScoreData {
+  public async getFullData(): Promise<ScoreData> {
     if (Object.keys(this.cache_origin_data).length === 0) {
-      this.__getRemoteData(); // 获取远程数据
+      await this.__getRemoteData(); // 获取远程数据
     }
 
     if (Object.keys(this.cache_origin_data).length > 0) {
@@ -195,8 +210,10 @@ export class StudentData {
    * @param itemKey 项目键名
    * @returns 单项成绩详情
    */
-  public getItemScore(itemKey: TestItemKey): ItemScoreDetail | null {
-    const fullData = this.getFullData();
+  public async getItemScore(
+    itemKey: TestItemKey
+  ): Promise<ItemScoreDetail | null> {
+    const fullData = await this.getFullData();
     if (!fullData || Object.keys(fullData).length === 0) {
       return null;
     }
@@ -221,9 +238,11 @@ export class StudentData {
    * 获取学生历年体测数据分析
    * @returns 学生历年体测数据趋势分析
    */
-  public getHistoryAnalysis(): StudentHistoryAnalysis | ErrorResponse {
+  public async getHistoryAnalysis(): Promise<
+    StudentHistoryAnalysis | ErrorResponse
+  > {
     if (this.history_data.length === 0) {
-      this.__getHistoryData();
+      await this.__getHistoryData();
     }
 
     if (this.history_data.length === 0) {
@@ -327,8 +346,19 @@ export class StudentData {
    * 获取学生历年体测数据
    * @private
    */
-  private __getHistoryData(): void {
+  private async __getHistoryData(): Promise<void> {
     // TODO: 实现从服务器获取历史数据的逻辑
-    // this.history_data = [...从服务器获取的历史数据];
+    try {
+      const response = await fetch(`/api/student/${this.stu_id}/history`);
+      if (response.ok) {
+        this.history_data = await response.json();
+      } else {
+        console.warn(`获取学生${this.stu_id}的历史数据失败`);
+        this.history_data = [];
+      }
+    } catch (error) {
+      console.error("历史数据获取失败:", error);
+      this.history_data = [];
+    }
   }
 }
