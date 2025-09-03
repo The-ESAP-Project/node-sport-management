@@ -14,11 +14,25 @@ export interface PaginationInfo {
   pages: number
 }
 
+// 分页数据响应接口
+export interface PaginatedApiResponse<T = any> {
+  code: number
+  message: string
+  data: T[] | null
+  pagination: {
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+  } | null
+  timestamp: string
+}
+
 // API 响应基础接口
 export interface ApiResponse<T = unknown> {
   code: number
   message: string
-  data: T
+  data: T | null
   timestamp: string
 }
 

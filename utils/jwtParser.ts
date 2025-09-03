@@ -38,14 +38,10 @@ async function jwtParser(req: Request, res: Response, next: NextFunction) {
             return res.status(401).json({ code: -1, message: 'Invalid token structure', data: null });
         }
 
-        if (requestPath.startsWith(`${API_BASE_ROUTE}/v1/sport/`)) {
-            return userLimiter(req, res, next);
-        } else if (requestPath.startsWith(`${API_BASE_ROUTE}/v1/student/`)) {
-            return userLimiter(req, res, next);
-        } else if (requestPath.startsWith(`${API_BASE_ROUTE}/v1/user/`) && role === 'admin') {
+        if (role === 'admin') {
             return adminLimiter(req, res, next);
         } else {
-            return res.status(403).json({ code: -1, message: 'Access denied', data: null });
+            return userLimiter(req, res, next);
         }
 
     } catch (error) {

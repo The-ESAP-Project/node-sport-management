@@ -29,6 +29,8 @@ import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
 // @ts-ignore
 import studentRoutes from './routes/student';
+// @ts-ignore
+import classRoutes from './routes/classes';
 
 
 const NEED_INIT_DB = process.env.NEED_INIT === 'true';
@@ -149,8 +151,9 @@ if (cluster.isPrimary) {
   app.use(jwtParser);
 
   app.use(`${API_BASE_ROUTE}/v1/auth`, authLimiter, authRoutes);
-  app.use(`${API_BASE_ROUTE}/v1/user`, authorize(['superadmin']), userRoutes);
-  app.use(`${API_BASE_ROUTE}/v1/student`, authorize(['superadmin', 'admin']), studentRoutes);
+  app.use(`${API_BASE_ROUTE}/v1/user`, authorize(['admin']), userRoutes);
+  app.use(`${API_BASE_ROUTE}/v1/students`, authorize(['admin']), studentRoutes);
+  app.use(`${API_BASE_ROUTE}/v1/classes`, authorize(['admin']), classRoutes);
 
   app.use(`/*path`, (req, res) => {
     logger.warn(`API endpoint not found: ${req.originalUrl}`, {

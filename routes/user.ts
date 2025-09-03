@@ -46,7 +46,7 @@ router.post('/', async (req: Request<{}, ApiResponse<User>, CreateUserRequest>, 
       });
     }
 
-    if (!['superadmin', 'admin', 'reporter'].includes(role)) {
+    if (!['admin', 'reporter'].includes(role)) {
       return res.status(422).json({
         code: ErrorCode.BadRequest,
         message: 'Invalid role',
@@ -146,7 +146,7 @@ router.put('/:id', async (req: Request<{ id: string }, ApiResponse<User>, Update
       });
     }
 
-    if (role && !['superadmin', 'admin', 'reporter'].includes(role)) {
+    if (role && !['admin', 'reporter'].includes(role)) {
       return res.status(422).json({
         code: ErrorCode.BadRequest,
         message: 'Invalid role',

@@ -9,6 +9,8 @@ export interface StudentInfo {
   StuNation: number;
   StuBirth: string;
   classID: number;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 export interface StudentInfoCreationAttributes extends Omit<StudentInfo, 'id'> {}
@@ -63,6 +65,17 @@ StudentInfoModel.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     comment: '班级ID'
+  },
+  isDeleted: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: '软删除标志'
+  },
+  deletedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    comment: '删除时间'
   }
 }, {
   sequelize,
