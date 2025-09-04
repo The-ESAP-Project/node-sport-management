@@ -164,6 +164,25 @@ export interface TopStudent {
   totalScore: number;
 }
 
+/** 单项前5名学生信息 */
+export interface CategoryTopStudent {
+  id: string;
+  name: string;
+  score: number;
+  level: Level;
+  rawData?: number;
+}
+
+/** 各项目前5名学生 */
+export interface CategoryTopStudents {
+  erScore: CategoryTopStudent[]; // 耐力跑前5名
+  sdrScore: CategoryTopStudent[]; // 50米跑前5名
+  sarScore: CategoryTopStudent[]; // 坐位体前屈前5名
+  sljScore: CategoryTopStudent[]; // 立定跳远前5名
+  vcScore: CategoryTopStudent[]; // 肺活量前5名
+  sapScore: CategoryTopStudent[]; // 仰卧起坐/引体向上前5名
+}
+
 /** 弱项分类 */
 export interface WeakCategory {
   name: string;
@@ -182,7 +201,8 @@ export interface GradeStats {
   genderDistribution: GradeGenderDistribution;
   averageScores: GradeAverageScores;
   levelDistribution: GradeLevelDistribution;
-  topStudents: TopStudent[];
+  topStudents: TopStudent[]; // 总分前5名
+  categoryTopStudents: CategoryTopStudents; // 各项目前5名
   weakestCategories: WeakCategory[];
   genderStats: {
     male: GenderStats;
