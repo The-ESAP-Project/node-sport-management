@@ -89,7 +89,8 @@ SportData.init(
         model: Student,
         key: 'id'
       },
-      comment: '学生ID'
+      comment: '学生ID',
+      field: 'student_i_d'
     },
     year: {
       type: DataTypes.INTEGER,
@@ -99,16 +100,18 @@ SportData.init(
     gradeID: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      comment: '年级ID'
+      comment: '年级ID',
+      field: 'grade_i_d'
     },
     classID: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
         model: ClassInfo,
-        key: 'classID'
+        key: 'class_i_d'
       },
-      comment: '班级ID'
+      comment: '班级ID',
+      field: 'class_i_d'
     },
     height: {
       type: DataTypes.INTEGER,
@@ -123,57 +126,68 @@ SportData.init(
     vitalCapacity: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '肺活量 (mL)'
+      comment: '肺活量 (mL)',
+      field: 'vital_capacity'
     },
     fiftyRun: {
       type: DataTypes.FLOAT(5, 2),
       allowNull: true,
-      comment: '50米跑 (秒)'
+      comment: '50米跑 (秒)',
+      field: 'fifty_run'
     },
     standingLongJump: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '立定跳远 (cm)'
+      comment: '立定跳远 (cm)',
+      field: 'standing_long_jump'
     },
     sitAndReach: {
       type: DataTypes.FLOAT(5, 1),
       allowNull: true,
-      comment: '坐位体前屈 (cm)'
+      comment: '坐位体前屈 (cm)',
+      field: 'sit_and_reach'
     },
     eightHundredRun: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '800米跑 (秒)'
+      comment: '800米跑 (秒)',
+      field: 'eight_hundred_run'
     },
     oneThousandRun: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '1000米跑 (秒)'
+      comment: '1000米跑 (秒)',
+      field: 'one_thousand_run'
     },
     sitUp: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '1分钟仰卧起坐 (个)'
+      comment: '1分钟仰卧起坐 (个)',
+      field: 'sit_up'
     },
     pullUp: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '引体向上 (个)'
+      comment: '引体向上 (个)',
+      field: 'pull_up'
     },
     totalScore: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
-      comment: '总分'
+      comment: '总分',
+      field: 'total_score'
     },
     classRank: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '班级排名'
+      comment: '班级排名',
+      field: 'class_rank'
     },
     gradeRank: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: '年级排名'
+      comment: '年级排名',
+      field: 'grade_rank'
     },
     created_at: {
       type: DataTypes.DATE,
@@ -196,23 +210,23 @@ SportData.init(
     updatedAt: 'updated_at',
     indexes: [
       {
-        fields: ['studentID']
+        fields: ['student_i_d']
       },
       {
         fields: ['year']
       },
       {
-        fields: ['classID']
+        fields: ['class_i_d']
       },
       {
-        fields: ['gradeID']
+        fields: ['grade_i_d']
       },
       {
-        fields: ['totalScore']
+        fields: ['total_score']
       },
       {
         unique: true,
-        fields: ['studentID', 'year'],
+        fields: ['student_i_d', 'year'],
         name: 'unique_student_year'
       }
     ]
